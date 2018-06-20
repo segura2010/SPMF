@@ -117,8 +117,19 @@ public class SequentialRule {
     /**
      * Get a string representation of this rule.
      */
-    public String toString(){
-            return itemset1.toString() +  " ==> " + itemset2.toString();
+    public String toString(int sequencecount){
+        String antecedent = itemset1.toString().replace(" ", ",");
+        antecedent = antecedent.substring(0, antecedent.length()-1);
+        String consequent = itemset2.toString().replace(" ", ",");
+        consequent = consequent.substring(0, consequent.length()-1);
+        
+        String out = antecedent +  " ==> " + consequent;
+        // add measures
+        out += " #SUP: " + transactioncount;
+        out += " #CONF: " + getConfidence();
+        out += " #LIFT: " + getLift(sequencecount);
+        
+        return out;
     }
 
     /**

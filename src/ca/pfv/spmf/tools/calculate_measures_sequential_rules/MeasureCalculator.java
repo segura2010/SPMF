@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import ca.pfv.spmf.patterns.itemset_array_integers_with_tids.Itemset;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +36,9 @@ public class MeasureCalculator {
         
         // 3. calculate itemsets support
         rules = calculateItemsetsSupport(db, rules);
+        
+        // 4. write to file
+        writeSequencialRules(outputFile, rules, db.size());
     }
     
     private SequenceDatabase readDatabase(String dbFile) throws IOException{
@@ -105,6 +110,17 @@ public class MeasureCalculator {
     
     private ArrayList<SequentialRule> calculateItemsetsSupport(SequenceDatabase db, ArrayList<SequentialRule> rules){
         
+        // It doesnt work...
+        // the items from the antecedent or consequent can be on the same itemset in the sequence or in different itemsets..
+        // if I have the rule: 1,2 -> 3
+        // 1 and 2 must occur before 3, but they can occur in different sequences..
+        // A better approach:
+        // First check the consequent, from the last itemset to the first itemset
+        // save the last checked itemset for the consequent
+        // start looking for the antecedent from the saved itemset
+        // With this approach you will be sure that the antecedent occurs before consequent
+        // and the items can be in different itemsets
+        
         for (Sequence seq : db.getSequences()) {
             // for each sequence, check each rule and update the support of their itemsets and the rule itself
             for(SequentialRule rule : rules){
@@ -117,20 +133,24 @@ public class MeasureCalculator {
                         if(!containsItem){
                             containsItemset1 = false;
                             break;
-                        }else{
-                            hasContainedItemset1 = true;
                         }
+                    }
+                    if(containsItemset1){
+                        hasContainedItemset1 = true;
+                        System.out.println("Sequence "+seq.getId()+" contains antecedent");
                     }
                     for(Integer item : rule.getItemset2().itemset){
                         Boolean containsItem = sequenceItemset.contains(item);
                         if(!containsItem){
                             containsItemset2 = false;
                             break;
-                        }else if(hasContainedItemset1){
-                            // only set to true if we already saw the antecedent
-                            // because antecedent MUST happen before consequent (in sequential rules)
-                            hasContainedItemset2 = true;
                         }
+                    }
+                    if(containsItemset2 && hasContainedItemset1){
+                        // only set to true if we already saw the antecedent
+                        // because antecedent MUST happen before consequent (in sequential rules)
+                        hasContainedItemset2 = true;
+                        System.out.println("Sequence "+seq.getId()+" contains consequent&antecedent");
                     }
                     // yes, if the sequence contains multiple itemsets that contains our itemset
                     // we will add the same transaction multiple times to the transactions list
@@ -151,6 +171,15 @@ public class MeasureCalculator {
         }
         
         return rules;
+    }
+    
+    private void writeSequencialRules(String outputFile, ArrayList<SequentialRule> rules, int sequenceCount) throws IOException{
+        PrintWriter writer = new PrintWriter(new File(outputFile));
+        
+        for(SequentialRule rule : rules){
+            writer.println(rule.toString(sequenceCount));
+        }
+        writer.close();
     }
     
     /**
