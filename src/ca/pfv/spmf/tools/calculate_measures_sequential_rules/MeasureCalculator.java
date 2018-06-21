@@ -108,63 +108,80 @@ public class MeasureCalculator {
         return rules;
     }
     
-    private ArrayList<SequentialRule> calculateItemsetsSupport(SequenceDatabase db, ArrayList<SequentialRule> rules){
+    /**
+    * Find the range of itemsets in which an itemset is contained
+    * @param it itemset to find
+    * @param seq sequence in which find it
+    * @param fromItemset start looking for it from an specific itemset index in the sequence
+    * @return an integer or null if the string is not an integer.
+    */
+    private int[] findItemsetInSequence(Itemset it, Sequence seq, int fromItemset){
+        int[] range = new int[2];
+        range[0] = -1; range[1] = -1;
         
-        // It doesnt work...
-        // the items from the antecedent or consequent can be on the same itemset in the sequence or in different itemsets..
-        // if I have the rule: 1,2 -> 3
-        // 1 and 2 must occur before 3, but they can occur in different sequences..
-        // A better approach:
-        // First check the consequent, from the last itemset to the first itemset
-        // save the last checked itemset for the consequent
-        // start looking for the antecedent from the saved itemset
-        // With this approach you will be sure that the antecedent occurs before consequent
-        // and the items can be in different itemsets
+        List<List<Integer>> sequenceItemsets = seq.getItemsets();
+        
+        for(int item : it.getItems()){
+            Boolean itemFound = false;
+            for(int i=fromItemset;i<sequenceItemsets.size();i++){
+                List<Integer> actSequence = sequenceItemsets.get(i);
+                Boolean containsItem = actSequence.contains(item);
+                if(containsItem){
+                    itemFound = true;
+                    if(range[0] == -1){
+                        // if range[0] not updated, update both
+                        range[0] = i; range[1] = i;
+                    }else if(range[0] > i){
+                        range[0] = i;
+                    }
+                    if(range[1] < i){
+                        range[1] = i;
+                    }
+                    break;
+                }
+            }
+            if(!itemFound){
+                // item not found in any itemset of this sequence
+                // so this itemset is not contained in this sequence
+                range[0] = -1; range[1] = -1;
+                return range;
+            }
+        }
+        
+        return range;
+    }
+    
+    private ArrayList<SequentialRule> calculateItemsetsSupport(SequenceDatabase db, ArrayList<SequentialRule> rules){
         
         for (Sequence seq : db.getSequences()) {
             // for each sequence, check each rule and update the support of their itemsets and the rule itself
             for(SequentialRule rule : rules){
-                Boolean hasContainedItemset1 = false, hasContainedItemset2 = false;
-                for(List<Integer> sequenceItemset : seq.getItemsets()){
-                    // add transaction ID to itemset 1 and 2 if it contains all the items
-                    Boolean containsItemset1 = true, containsItemset2 = true;
-                    for(Integer item : rule.getItemset1().itemset){
-                        Boolean containsItem = sequenceItemset.contains(item);
-                        if(!containsItem){
-                            containsItemset1 = false;
-                            break;
-                        }
-                    }
-                    if(containsItemset1){
-                        hasContainedItemset1 = true;
-                        System.out.println("Sequence "+seq.getId()+" contains antecedent");
-                    }
-                    for(Integer item : rule.getItemset2().itemset){
-                        Boolean containsItem = sequenceItemset.contains(item);
-                        if(!containsItem){
-                            containsItemset2 = false;
-                            break;
-                        }
-                    }
-                    if(containsItemset2 && hasContainedItemset1){
-                        // only set to true if we already saw the antecedent
-                        // because antecedent MUST happen before consequent (in sequential rules)
-                        hasContainedItemset2 = true;
-                        System.out.println("Sequence "+seq.getId()+" contains consequent&antecedent");
-                    }
-                    // yes, if the sequence contains multiple itemsets that contains our itemset
-                    // we will add the same transaction multiple times to the transactions list
-                    // BUT the transaction list is a HashSet, so repeated elements will not be 
-                    // inserted
-                    if(containsItemset1){
-                        rule.getItemset1().transactionsIds.add(seq.getId());
-                    }
-                    if(containsItemset2){
-                        rule.getItemset2().transactionsIds.add(seq.getId());
-                    }
+                int[] antecedentRange = findItemsetInSequence(rule.getItemset1(), seq, 0);
+                Boolean containsAntecedent = (antecedentRange[0] != -1) && (antecedentRange[1] != -1);
+                Boolean containsConsequent = false, containsConsequentAfterAntecedent = false;
+                if(containsAntecedent){
+                    // check if contains consequent after antecedent
+                    int[] consequentRangeAfterAntecedent = findItemsetInSequence(rule.getItemset2(), seq, antecedentRange[1]);
+                    containsConsequentAfterAntecedent = (consequentRangeAfterAntecedent[0] != -1) && (consequentRangeAfterAntecedent[1] != -1);
+                    containsConsequent = containsConsequentAfterAntecedent;
+                    
+                    // update antecedent info
+                    rule.getItemset1().transactionsIds.add(seq.getId());
                 }
-                // check if some sequence has matched the sequential rule
-                if(hasContainedItemset1 && hasContainedItemset2){
+                if(!containsConsequentAfterAntecedent){
+                    // if it does not contain the consequent after antecedet, the rule is not matched,
+                    // but I still have to check if the full sequence contains the consequent in order to update 
+                    // the consequent info (for later support calculation)
+                    int[] consequentRange = findItemsetInSequence(rule.getItemset2(), seq, 0);
+                    containsConsequent = (consequentRange[0] != -1) && (consequentRange[1] != -1);
+                }
+                if(containsConsequentAfterAntecedent || containsConsequent){
+                    // update consequent info
+                    rule.getItemset2().transactionsIds.add(seq.getId());
+                }
+                
+                if(containsAntecedent && containsConsequentAfterAntecedent){
+                    // finally, update rule info if the sequence matches the rule
                     rule.incrementTransactionCount();
                 }
             }
