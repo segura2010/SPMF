@@ -21,8 +21,8 @@ public class SequentialRule {
 
     
     public SequentialRule(){
-            this.itemset1 = null;
-            this.itemset2 = null;
+            this.itemset1 = new Itemset();
+            this.itemset2 = new Itemset();
     }
     
     /**
@@ -85,26 +85,6 @@ public class SequentialRule {
             double thirdTerm = ((double) itemset1.getAbsoluteSupport()) / ((double) sequencecount);
             double lift = firstTerm / (secondTerm * thirdTerm);
             return lift;
-    }
-
-    /**
-     * Get the lift of this rule. - TEMP!!
-     * @return a String value.
-     */
-    public String getLiftAsString(int sequencecount) {
-//		if(itemset1.contains(2) && itemset2.contains(6)){
-//			System.out.println();
-//		}
-
-            //Verbose for review purposes
-//		double itemset2_rel_support = ((double) transactioncount) / ((double) sequencecount);
-//		return (String)" itemset2  abs sup:" + itemset2.getAbsoluteSupport()  + "/  sequencecount:" + sequencecount +
-//				"|itemset2_rel_support:" + itemset2_rel_support + "| lift:" + (getConfidence()) / (itemset2_rel_support);
-            double firstTerm = ((double) transactioncount) / ((double) sequencecount);
-            double secondTerm = ((double) itemset2.getAbsoluteSupport()) / ((double) sequencecount);
-            double thirdTerm = ((double) itemset1.getAbsoluteSupport()) / ((double) sequencecount);
-            double lift = firstTerm / (secondTerm * thirdTerm);
-            return Double.toString(lift);
     }
 
     /**

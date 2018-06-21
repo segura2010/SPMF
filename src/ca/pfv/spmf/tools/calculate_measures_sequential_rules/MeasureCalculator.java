@@ -27,6 +27,12 @@ import java.util.Set;
  */
 public class MeasureCalculator {
     
+    /**
+    * It reads a sequence DB and a sequencial rules file to calculate more quality measures and write them in an output file
+    * @param dbFile path to the sequential database file
+    * @param sequencialRulesFile path to the sequential rules file
+    * @param outputFile path and name of the output file
+    */
     public void calculate(String dbFile, String sequencialRulesFile, String outputFile) throws IOException{
         // 1. read sequence DB
         SequenceDatabase db = readDatabase(dbFile);
@@ -41,6 +47,11 @@ public class MeasureCalculator {
         writeSequencialRules(outputFile, rules, db.size());
     }
     
+    /**
+    * It reads a file (DB) of sequences
+    * @param dbFile path to the sequential database file
+    * @return SequenceDatabase
+    */
     private SequenceDatabase readDatabase(String dbFile) throws IOException{
         SequenceDatabase db = new SequenceDatabase();
         db.loadFile(dbFile);
@@ -48,6 +59,11 @@ public class MeasureCalculator {
         return db;
     }
     
+    /**
+    * It reads a file of sequential rules
+    * @param sequencialRulesFile path to the sequential rules file
+    * @return ArrayList of the readed rules
+    */
     private ArrayList<SequentialRule> readSequencialRules(String sequencialRulesFile) throws IOException{
         FileInputStream rulesIS = new FileInputStream(new File(sequencialRulesFile));
         BufferedReader bfReaderRules = new BufferedReader(new InputStreamReader(rulesIS));
@@ -109,11 +125,11 @@ public class MeasureCalculator {
     }
     
     /**
-    * Find the range of itemsets in which an itemset is contained
+    * It finds the range of itemsets in which an itemset is contained
     * @param it itemset to find
     * @param seq sequence in which find it
     * @param fromItemset start looking for it from an specific itemset index in the sequence
-    * @return an integer or null if the string is not an integer.
+    * @return the range of itemsets in which the itemset have been found in the sequence
     */
     private int[] findItemsetInSequence(Itemset it, Sequence seq, int fromItemset){
         int[] range = new int[2];
@@ -151,6 +167,12 @@ public class MeasureCalculator {
         return range;
     }
     
+    /**
+    * It updates itemsets and rules information in order to calculate the support
+    * @param db Sequence database
+    * @param rules ArrayList of SequentialRule rules
+    * @return updated set of rules
+    */
     private ArrayList<SequentialRule> calculateItemsetsSupport(SequenceDatabase db, ArrayList<SequentialRule> rules){
         
         for (Sequence seq : db.getSequences()) {
@@ -190,6 +212,12 @@ public class MeasureCalculator {
         return rules;
     }
     
+    /**
+    * It writes the set of rules with their quality measures in a file
+    * @param outputFile Output file path and name
+    * @param rules ArrayList of SequentialRule rules
+    * @param sequenceCount number of sequences in the database (needed to finally calculate and write the quality measures)
+    */
     private void writeSequencialRules(String outputFile, ArrayList<SequentialRule> rules, int sequenceCount) throws IOException{
         PrintWriter writer = new PrintWriter(new File(outputFile));
         
@@ -200,7 +228,7 @@ public class MeasureCalculator {
     }
     
     /**
-    * Get the integer representation of a string or null if the string is not an integer.
+    * It gets the integer representation of a string or null if the string is not an integer.
     * @param string a string
     * @return an integer or null if the string is not an integer.
     */
