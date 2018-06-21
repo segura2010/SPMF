@@ -21,8 +21,8 @@ public class SequentialRule {
 
     
     public SequentialRule(){
-            this.itemset1 = new Itemset();
-            this.itemset2 = new Itemset();
+        this.itemset1 = new Itemset();
+        this.itemset2 = new Itemset();
     }
     
     /**
@@ -31,8 +31,8 @@ public class SequentialRule {
      * @param itemset2  the right itemset
      */
     public SequentialRule(Itemset itemset1, Itemset itemset2){
-            this.itemset1 = itemset1;
-            this.itemset2 = itemset2;
+        this.itemset1 = itemset1;
+        this.itemset2 = itemset2;
     }
 
     /**
@@ -40,7 +40,7 @@ public class SequentialRule {
      * @return an Itemset
      */
     public Itemset getItemset1() {
-            return itemset1;
+        return itemset1;
     }
 
     /**
@@ -48,7 +48,7 @@ public class SequentialRule {
      * @return an Itemset
      */
     public Itemset getItemset2() {
-            return itemset2;
+        return itemset2;
     }
 
     /**
@@ -57,12 +57,12 @@ public class SequentialRule {
      * @return the support as a double
      */
     public double getAbsoluteSupport(int sequencecount) {
-            return ((double)transactioncount) / ((double) sequencecount);
+        return ((double)transactioncount) / ((double) sequencecount);
     }
 
     // Could these terms possibly be reversed?  Is this the absolute and above the relative?
     public int getRelativeSupport(){
-            return transactioncount;
+        return transactioncount;
     }
 
     /**
@@ -70,7 +70,7 @@ public class SequentialRule {
      * @return a double value.
      */
     public double getConfidence() {
-            return ((double)transactioncount) / ((double) itemset1.getAbsoluteSupport());
+        return ((double)transactioncount) / ((double) itemset1.getAbsoluteSupport());
     }
 
     /**
@@ -78,20 +78,57 @@ public class SequentialRule {
      * @return a double value.
      */
     public double getLift(int sequencecount) {
-
-            //Verbose for review purposes
-            double firstTerm = ((double) transactioncount) / ((double) sequencecount);
-            double secondTerm = ((double) itemset2.getAbsoluteSupport()) / ((double) sequencecount);
-            double thirdTerm = ((double) itemset1.getAbsoluteSupport()) / ((double) sequencecount);
-            double lift = firstTerm / (secondTerm * thirdTerm);
-            return lift;
+        double firstTerm = ((double) transactioncount) / ((double) sequencecount);
+        double secondTerm = ((double) itemset2.getAbsoluteSupport()) / ((double) sequencecount);
+        double thirdTerm = ((double) itemset1.getAbsoluteSupport()) / ((double) sequencecount);
+        double lift = firstTerm / (secondTerm * thirdTerm);
+        return lift;
+    }
+    
+    /**
+     * Get the Certain Factor of this rule.
+     * @return a double value.
+     */
+    public double getCF(int sequencecount) {
+        double cf = 0.0;
+        double confidence = getConfidence();
+        double supportConsequent = (double)itemset2.getAbsoluteSupport() / (double)sequencecount;
+        
+        if(confidence > supportConsequent){
+            cf = (confidence - supportConsequent) / (1 - supportConsequent);
+        }else if(confidence < supportConsequent){
+            cf = (confidence - supportConsequent) / (supportConsequent);
+        }else{
+            cf = 0.0;
+        }
+        
+        return cf;
+    }
+    
+    /**
+     * Get the Conviction of this rule.
+     * @return a double value.
+     */
+    public double getConviction(int sequencecount) {
+        double conviction = 0.0;
+        double confidence = getConfidence();
+        double support = getAbsoluteSupport(sequencecount);
+        double supportConsequent = (double)itemset2.getAbsoluteSupport() / (double)sequencecount;
+        double supportAntecedent = (double)itemset1.getAbsoluteSupport() / (double)sequencecount;
+        
+        if(supportConsequent == 1 || supportAntecedent == 0){
+            return 1.0;
+        }
+        
+        conviction = (supportAntecedent * (1 - supportConsequent)) / (supportAntecedent - support);
+        return conviction;
     }
 
     /**
      * Print this rule to System.out
      */
     public void print(){
-            System.out.println(toString());
+        System.out.println(toString());
     }
 
     /**
@@ -108,6 +145,8 @@ public class SequentialRule {
         out += " #SUP: " + transactioncount;
         out += " #CONF: " + getConfidence();
         out += " #LIFT: " + getLift(sequencecount);
+        out += " #CF: " + getCF(sequencecount);
+        out += " #CONV: " + getConviction(sequencecount);
         
         return out;
     }
@@ -116,7 +155,7 @@ public class SequentialRule {
      * Increase the support of this rule.
      */
     void incrementTransactionCount() {
-            this.transactioncount++;
+        this.transactioncount++;
     }
 
     /**
@@ -124,7 +163,7 @@ public class SequentialRule {
      * @param transactioncount the support as an integer.
      */
     void setTransactioncount(int transactioncount) {
-            this.transactioncount = transactioncount;
+        this.transactioncount = transactioncount;
     }
 
     public void setItemset1(Itemset itemset1) {
