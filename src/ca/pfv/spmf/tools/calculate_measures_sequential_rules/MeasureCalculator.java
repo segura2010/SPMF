@@ -242,5 +242,45 @@ public class MeasureCalculator {
        // only got here if we didn't return false
        return result;
    }
+   
+   /**
+    * It reads a sequence DB and calculate the quality measures for a rule
+    * @param dbFile path to the sequential database file
+    * @param antecedent antecedent itemset of the rule
+    * @param consequent consequent itemset of the rule
+    * @return SequentialRule
+    */
+    public SequentialRule calculateForRule(String dbFile, Itemset antecedent, Itemset consequent) throws IOException{
+        // 1. read sequence DB
+        SequenceDatabase db = readDatabase(dbFile);
+        
+        // 2. add the sequencial assocuation rule
+        ArrayList<SequentialRule> rules = new ArrayList<SequentialRule>();
+        rules.add(new SequentialRule(antecedent, antecedent));
+        
+        // 3. calculate itemsets support
+        rules = calculateItemsetsSupport(db, rules);
+        
+        return rules.get(0);
+    }
+    
+    /**
+    * It process a sequence DB and calculate the quality measures for a rule
+    * @param db a SequenceDatabase
+    * @param antecedent antecedent itemset of the rule
+    * @param consequent consequent itemset of the rule
+    * @return SequentialRule
+    */
+    public SequentialRule calculateForRule(SequenceDatabase db, Itemset antecedent, Itemset consequent) throws IOException{
+        
+        // 1. add the sequencial assocuation rule
+        ArrayList<SequentialRule> rules = new ArrayList<SequentialRule>();
+        rules.add(new SequentialRule(antecedent, antecedent));
+        
+        // 2. calculate itemsets support
+        rules = calculateItemsetsSupport(db, rules);
+        
+        return rules.get(0);
+    }
     
 }
