@@ -16,6 +16,7 @@ package ca.pfv.spmf.algorithms.sequential_rules.cmdeogun;
 * SPMF. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import ca.pfv.spmf.algorithms.sequential_rules.topseqrules_and_tns.AlgoTNS;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,6 +31,10 @@ import ca.pfv.spmf.input.sequence_database_list_integers.Sequence;
 import ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase;
 import ca.pfv.spmf.patterns.itemset_array_integers_with_tids.Itemset;
 import ca.pfv.spmf.tools.MemoryLogger;
+import ca.pfv.spmf.tools.calculate_measures_sequential_rules.MeasureCalculator;
+import ca.pfv.spmf.tools.calculate_measures_sequential_rules.SequentialRule;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the original implementation of the CMDeo algorithm 
@@ -84,6 +89,7 @@ public class AlgoCMDeogun {
 	
 	// the sequence database
 	SequenceDatabase database;
+        SequenceDatabase contrastdatabase;
 	
 	// Special parameter to set the size of rules to be discovered
 	int minLeftSize = 0;  // min size of left part of the rule
@@ -119,6 +125,13 @@ public class AlgoCMDeogun {
 		// load the sequence database from the input file
 		database = new SequenceDatabase();
 		database.loadFile(input);
+                
+                contrastdatabase = new ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase();
+                if(input.contains("VLDC")){
+                    contrastdatabase.loadFile(input.replace("VLDC", "LDC"));
+                }else{
+                    contrastdatabase.loadFile(input.replace("LDC", "VLDC"));
+                }
 		
 		// convert absolute minimum support to a relative minimum support by
 		// multiplying by the database size
@@ -744,6 +757,20 @@ public class AlgoCMDeogun {
 	 * @throws IOException exception if error writing the file
 	 */
 	private void saveRule(int support, double confIJ, String liftIJ, Itemset itemsetI, Itemset itemsetJ) throws IOException {
+            
+                // before adding rule, contrast with the other DB to check the support
+                MeasureCalculator mcalc = new MeasureCalculator();
+                try {
+                    SequentialRule r = mcalc.calculateForRule(this.contrastdatabase, itemsetI, itemsetJ);
+                    if(r.getConfidence() > this.minConfidence){
+                        // if conf>minconf in the contrast DB, it is not an interesting rule, we do not save it.
+                        System.out.println("Rule deleted!");
+                        return;
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(AlgoTNS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            
 		// increase the number of valid rules found
 		ruleCount++;
 
