@@ -256,7 +256,7 @@ public class MeasureCalculator {
         
         // 2. add the sequencial assocuation rule
         ArrayList<SequentialRule> rules = new ArrayList<SequentialRule>();
-        rules.add(new SequentialRule(antecedent, antecedent));
+        rules.add(new SequentialRule(antecedent, consequent));
         
         // 3. calculate itemsets support
         rules = calculateItemsetsSupport(db, rules);
@@ -275,7 +275,26 @@ public class MeasureCalculator {
         
         // 1. add the sequencial assocuation rule
         ArrayList<SequentialRule> rules = new ArrayList<SequentialRule>();
-        rules.add(new SequentialRule(antecedent, antecedent));
+        rules.add(new SequentialRule(antecedent, consequent));
+        
+        // 2. calculate itemsets support
+        rules = calculateItemsetsSupport(db, rules);
+        
+        return rules.get(0);
+    }
+    
+    /**
+    * It process a sequence DB and calculate the quality measures for a rule
+    * @param db a SequenceDatabase
+    * @param antecedent antecedent itemset of the rule
+    * @param consequent consequent itemset of the rule
+    * @return SequentialRule
+    */
+    public SequentialRule calculateForRule(SequenceDatabase db, int[] antecedent, int[] consequent) throws IOException{
+        
+        // 1. add the sequencial assocuation rule
+        ArrayList<SequentialRule> rules = new ArrayList<SequentialRule>();
+        rules.add(new SequentialRule(new Itemset(antecedent), new Itemset(consequent)));
         
         // 2. calculate itemsets support
         rules = calculateItemsetsSupport(db, rules);

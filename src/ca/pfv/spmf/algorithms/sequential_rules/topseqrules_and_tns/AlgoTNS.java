@@ -31,6 +31,10 @@ import ca.pfv.spmf.datastructures.redblacktree.RedBlackTree;
 import ca.pfv.spmf.input.sequence_database_array_integers.Sequence;
 import ca.pfv.spmf.input.sequence_database_array_integers.SequenceDatabase;
 import ca.pfv.spmf.tools.MemoryLogger;
+import ca.pfv.spmf.tools.calculate_measures_sequential_rules.MeasureCalculator;
+import ca.pfv.spmf.tools.calculate_measures_sequential_rules.SequentialRule;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the original implementation of the TNS algorithm for mining Top-K non redundant sequential rules.
@@ -66,6 +70,7 @@ public class AlgoTNS {
 	
 	/** the sequence database */
 	SequenceDatabase database;  
+        ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase contrastdatabase;  
 	
 	/**  minimum support which will be raised dynamically */
 	int minsuppRelative;  
@@ -117,7 +122,9 @@ public class AlgoTNS {
 	 * @param delta : the chosen value of delta
 	 * @return a redblacktree containing the approximate top-k nonredundant sequential rules
 	 */
-	public RedBlackTree<Rule> runAlgorithm(int k, SequenceDatabase database, double minConfidence, int delta) {
+	public RedBlackTree<Rule> runAlgorithm(int k, SequenceDatabase database, ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase contrastdatabase, double minConfidence, int delta) {
+            
+                this.contrastdatabase = contrastdatabase;
 		// save the parameters 
 		this.delta = delta;
 		this.database = database;
@@ -428,6 +435,19 @@ main2:		for(int itemJ=itemI+1; itemJ <= database.maxItem; itemJ++){
 			kRules.remove(ruleX);
 		}
 	
+                // before adding rule, contrast with the other DB to check the support
+                MeasureCalculator mcalc = new MeasureCalculator();
+                try {
+                    SequentialRule r = mcalc.calculateForRule(this.contrastdatabase, rule.getItemset1(), rule.getItemset2());
+                    if(r.getConfidence() > this.minConfidence){
+                        // if conf>minconf in the contrast DB, it is not an interesting rule, we do not save it.
+                        System.out.println("Rule deleted!");
+                        return;
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(AlgoTNS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
 		// Now the rule "rule" has passed the test of Strategy 1 already,
 		// so we add it to the set of top-k rules
 		kRules.add(rule);

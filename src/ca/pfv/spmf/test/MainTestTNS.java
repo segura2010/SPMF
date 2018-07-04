@@ -19,6 +19,7 @@ public class MainTestTNS {
 		// Load database into memory
 		SequenceDatabase database = new SequenceDatabase(); 
 		database.loadFile(fileToPath("contextPrefixSpan.txt"));
+                ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase contrastdatabase = new ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase();
 
 		int k = 30; 
 		double minConf = 0.5; 
@@ -35,7 +36,7 @@ public class MainTestTNS {
 		algo.setMaxConsequentSize(1);  // optional
 		
 		// run the algorithm
-		RedBlackTree<Rule> kRules = algo.runAlgorithm(k, database, minConf,   delta );
+		RedBlackTree<Rule> kRules = algo.runAlgorithm(k, database, contrastdatabase, minConf,   delta );
 		
 		algo.writeResultTofile(".//output.txt");   // to save results to file
 		

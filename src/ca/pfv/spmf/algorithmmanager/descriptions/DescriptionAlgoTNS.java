@@ -57,6 +57,13 @@ public class DescriptionAlgoTNS extends DescriptionOfAlgorithm {
 		// Load database into memory
 		ca.pfv.spmf.input.sequence_database_array_integers.SequenceDatabase database = new ca.pfv.spmf.input.sequence_database_array_integers.SequenceDatabase();
 		database.loadFile(inputFile);
+                
+                ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase contrastdatabase = new ca.pfv.spmf.input.sequence_database_list_integers.SequenceDatabase();
+                if(inputFile.contains("VLDC")){
+                    contrastdatabase.loadFile(inputFile.replace("VLDC", "LDC"));
+                }else{
+                    contrastdatabase.loadFile(inputFile.replace("LDC", "VLDC"));
+                }
 
 		int k = getParamAsInteger(parameters[0]);
 		double minconf = getParamAsDouble(parameters[1]);
@@ -71,7 +78,7 @@ public class DescriptionAlgoTNS extends DescriptionOfAlgorithm {
 			algo.setMaxConsequentSize(getParamAsInteger(parameters[4]));
 		}
 		
-		algo.runAlgorithm(k, database, minconf, delta);
+		algo.runAlgorithm(k, database, contrastdatabase, minconf, delta);
 		algo.printStats();
 		algo.writeResultTofile(outputFile); // to save results to file
 	}
